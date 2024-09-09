@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - Euterpea
 - HSoM
+- UISF
 
 ghc-options:
 - -Wall
