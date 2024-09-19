@@ -6,7 +6,21 @@ module Lib
 
 import HSoM
 import FRP.UISF
+import FRP.UISF.UISF
+import FRP.UISF.UITypes
+import FRP.UISF.Widget.Construction
+import FRP.UISF.Graphics.Graphic
 import Euterpea
+
+keyPressWidget :: UISF () (SEvent [MidiMessage])
+keyPressWidget = withDisplay $ mkWidget [ANote 0 69 64 0.05] layout process draw
+  where  
+    layout = (Layout 0 0 0 0 0 0 1)
+    process a s rect evt = case evt of
+      SKey KeyEnter _ True -> (Just [ANote 0 74 64 0.05], [ANote 0 74 64 0.05], True)
+      SKey KeyShiftR _ True -> (Just [ANote 0 69 64 0.05], [ANote 0 69 64 0.05], True)
+      _ -> (Nothing, [], False)
+    draw _ _ _ = nullGraphic
 
 grow :: Double -> Double -> Double
 grow r x = r * x * (1 - x)
@@ -23,10 +37,8 @@ bifurcateUI = proc _ -> do
     r <- title "Growth rate" $ withDisplay (hSlider (2.4, 4.0) 2.4) -< ()
     pop <- accum 0.1 -< fmap (const (grow r)) tick
     _ <- title "Population" $ display -< pop
-    midiOut -< (mo, fmap (const (popToNote pop)) tick)
+    midi <- keyPressWidget -< ()
+    midi2 <- hold [] -< midi
+    midiOut -< (mo, fmap (const midi2) tick)
 
 bifurcate = runMUI (defaultMUIParams {uiTitle = "Bifurcate", uiSize = (300,500)}) bifurcateUI
-
-
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
